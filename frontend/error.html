@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Error - Stock Predictor</title>
+    <link href="https://fonts.googleapis.com/css2?family=Lora:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        /* Reset spacing */
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Lora', serif;
+            background: #f4f4f4;
+            color: #000;
+            line-height: 1.6;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 100px auto;
+            background: #fff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 0 15px rgba(0,0,0,0.1);
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 2rem;
+        }
+
+        .error-icon {
+            text-align: center;
+            font-size: 3rem;
+            margin-bottom: 20px;
+        }
+
+        .error-message {
+            background: #ffebee;
+            border: 1px solid #ffcdd2;
+            border-radius: 4px;
+            padding: 15px;
+            margin: 20px 0;
+            color: #c62828;
+            word-wrap: break-word;
+        }
+
+        .error-message strong {
+            font-weight: 700;
+        }
+
+        .suggestions {
+            background: #f9f9f9;
+            padding: 20px;
+            border-radius: 4px;
+            margin: 20px 0;
+        }
+
+        .suggestions h3 {
+            font-weight: 700;
+            margin-bottom: 15px;
+            font-size: 1.1rem;
+        }
+
+        .suggestions ul {
+            margin-left: 20px;
+            line-height: 1.8;
+        }
+
+        .suggestions li {
+            margin-bottom: 8px;
+        }
+
+        /* Button styling matching your other pages */
+        .back-button {
+            display: block;
+            padding: 12px 20px;
+            font-size: 1.1rem;
+            width: 100%;
+            font-weight: 700;
+            cursor: pointer;
+            background: #000;
+            color: #fff;
+            border: none;
+            text-align: center;
+            text-decoration: none;
+            transition: 0.3s;
+            margin-top: 20px;
+        }
+
+        .back-button:hover {
+            background: #fff;
+            color: #000;
+            border: 1px solid #000;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="error-icon">⚠️</div>
+        <h1>Something Went Wrong</h1>
+        
+        <div class="error-message">
+            <strong>Error:</strong> {{ error }}
+        </div>
+
+        <div class="suggestions">
+            <h3>Suggestions:</h3>
+            <ul>
+                <li>Make sure you entered a valid stock ticker symbol (e.g., AAPL, GOOGL, TSLA)</li>
+                <li>Check that the stock is traded on major exchanges</li>
+                <li>Ensure your internet connection is stable</li>
+                <li>Try again in a few moments</li>
+            </ul>
+        </div>
+
+        <a href="/" class="back-button">← Back to Stock Predictor</a>
+    </div>
+</body>
+</html>

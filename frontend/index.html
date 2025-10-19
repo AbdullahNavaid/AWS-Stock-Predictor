@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Stock Predictor</title>
+<link href="https://fonts.googleapis.com/css2?family=Lora:wght@400;700&display=swap" rel="stylesheet">
+
+<style>
+    /* ========== Base Layout ========== */
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Lora', serif; background: #f4f4f4; padding: 20px; }
+    .container { max-width: 900px; margin: 0 auto; background: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 0 15px rgba(0,0,0,0.1); }
+    h1 { text-align: center; margin-bottom: 20px; }
+
+    /* ========== Form and Buttons ========== */
+    .form-group { margin-bottom: 20px; }
+    label { font-weight: 700; }
+    input[type="text"] { width: 100%; padding: 10px; font-size: 1.1rem; margin-top: 5px; }
+    button { padding: 12px 20px; font-size: 1.1rem; width: 100%; font-weight: 700; cursor: pointer; background: #000; color: #fff; border: none; transition: 0.3s; }
+    button:hover { background: #333; }
+
+    /* ========== Budget, Error, Debug Messages ========== */
+    .budget-box { text-align: center; margin: 20px 0; font-size: 1.2rem; font-weight: bold; }
+    .error { color: red; text-align: center; margin: 20px 0; padding: 10px; background: #ffebee; border-radius: 4px; display: none; }
+    .debug { color: blue; text-align: left; margin: 10px 0; padding: 10px; background: #e3f2fd; border-radius: 4px; font-size: 0.9rem; display: none; white-space: pre-wrap; word-break: break-all; }
+
+    /* ========== Enhanced Loading Spinner ========== */
+    .loading {
+        display: none;
+        text-align: center;
+        margin: 40px auto;
+        font-size: 1.1rem;
+        color: #444;
+    }
+
+    .spinner {
+        width: 50px;
+        height: 50px;
+        border: 5px solid transparent;
+        border-top: 5px solid #4caf50;
+        border-right: 5px solid #2196f3;
+        border-radius: 50%;
+        margin: 0 auto 15px auto;
+        animation: spin 0.9s linear infinite;
+    }
+
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+
+    .loading-text {
+        font-weight: 600;
+        color: #222;
+        letter-spacing: 0.5px;
+        animation: fadeInOut 1.6s ease-in-out infinite;
+    }
+
+    @keyframes fadeInOut {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.5; }
+    }
+
+    /* ========== Table Layout ========== */
+    table { width: 100%; border-collapse: collapse; margin-top: 30px; }
+    th, td { padding: 8px; border: 1px solid #ddd; text-align: center; }
+    th { background: #000; color: #fff; cursor: pointer; transition: all 0.25s ease; }
+
+    /* Hover pop-out effect */
+    th:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+        background: #111;
+    }
+
+    tr:nth-child(even) { background: #f9f9f9; }
+
+    /* ========== Navigation link ========== */
+    .back-link { text-align: center; margin-bottom: 20px; }
+    .back-link a { color: #000; text-decoration: none; font-weight: 700; }
+    .back-link a:hover { text-decoration: underline; }
+
+    /* ========== Column styling ========== */
+    th.high, td.high { color: green; font-weight: bold; }
+    th.low, td.low { color: red; font-weight: bold; }
+    th.gainloss, td.gainloss { font-weight: bold; }
+
+    td.gain { color: green; }
+    td.zero { color: white; }
+    td.loss { color: red; }
+
+    td.gain::after { content: '▲'; margin-left: 4px; font-size: 0.8rem; vertical-align: middle; }
+    td.loss::after { content: '▼'; margin-left: 4px; font-size: 0.8rem; vertical-align: middle; }
+</style>
+</head>
+
+<body>
+<div class="container">
+    <div class="back-link">
+        <a href="start.html">← Change Budget</a>
+    </div>
+
+    <h1>Stock Tracker</h1>
+
+    <div id="budgetDisplay" class="budget-box"></div>
+    <div id="errorMsg" class="error"></div>
+    <div id="debugMsg" class="debug"></div>
+
+    <form id="predictionForm">
+        <div class="form-group">
+            <label for="ticker">Enter Stock Ticker:</label>
+            <input type="text" id="ticker" placeholder="e.g., AAPL">
+        </div>
+        <button type="submit">Search Ticker</button>
+    </form>
+
+    <div class="loading" id="stocksLoading">
+        <div class="spinner"></div>
+        <div class="loading-text">Loading market data...</div>
+    </div>
+
+    <table id="stocksTable" style="display:none;">
+        <thead>
+            <tr>
+                <th>Ticker</th>
+                <th>Date</th>
+                <th class="gainloss">Daily Gain/Loss</th>
+                <th class="high">High</th>
+                <th class="low">Low</th>
+                <th>Volume</th>
+            </tr>
+        </thead>
+        <tbody id="stocksTableBody"></tbody>
+    </table>
+</div>
+
+<script>
+const API_URL = 'https://a3gp55veoh.execute-api.us-east-1.amazonaws.com/prod/stocks';
+let allStocks = [];
+let budget = 0;
+
+/* Retrieve budget or redirect if missing */
+function getBudgetFromURL() {
+    const params = new URLSearchParams(window.location.search);
+    const budgetParam = params.get('budget');
+    if (budgetParam) {
+        budget = parseFloat(budgetParam);
+        document.getElementById('budgetDisplay').textContent =
+            `Budget: $${budget.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
+    } else {
+        window.location.href = 'start.html';
+    }
+}
+
+function showError(message) {
+    const errorEl = document.getElementById('errorMsg');
+    errorEl.textContent = message;
+    errorEl.style.display = 'block';
+}
+
+function hideError() {
+    document.getElementById('errorMsg').style.display = 'none';
+}
+
+function showDebug(message) {
+    const debugEl = document.getElementById('debugMsg');
+    debugEl.textContent = message;
+    debugEl.style.display = 'block';
+}
+
+/* Fetch data and build the table */
+async function loadStocks() {
+    const loading = document.getElementById('stocksLoading');
+    const table = document.getElementById('stocksTable');
+    const tbody = document.getElementById('stocksTableBody');
+
+    loading.style.display = 'block';
+    table.style.display = 'none';
+    hideError();
+
+    try {
+        // showDebug(`Fetching from: ${API_URL}`);  // Commented out such developer info
+        const response = await fetch(API_URL);
+        const result = await response.json();
+        allStocks = result.stocks || [];
+
+        if (allStocks.length === 0) {
+            showError('No stock data received from API');
+        } else {
+            displayStocks(allStocks);
+            makeTableSortable('stocksTable');
+        }
+    } catch (err) {
+        showError(`Failed to load stocks. Please try again later.`);
+        // showDebug(`Full error: ${err.stack || err}`);  // Commented out developer debugging
+        console.error('Full error:', err);
+    } finally {
+        loading.style.display = 'none';
+    }
+}
+
+function displayStocks(stocks) {
+    const table = document.getElementById('stocksTable');
+    const tbody = document.getElementById('stocksTableBody');
+    tbody.innerHTML = '';
+
+    stocks.forEach(s => {
+        if (!s.history || !s.history.length) return;
+        const latest = s.history[s.history.length - 1];
+        const gainLoss = latest.close - latest.open;
+        let gainLossClass = gainLoss > 0 ? 'gain' : gainLoss < 0 ? 'loss' : 'zero';
+
+        const row = tbody.insertRow();
+        row.innerHTML = `
+            <td>${s.ticker}</td>
+            <td>${latest.date || 'N/A'}</td>
+            <td class="gainloss ${gainLossClass}">$${gainLoss.toFixed(2)}</td>
+            <td class="high">$${latest.high.toFixed(2)}</td>
+            <td class="low">$${latest.low.toFixed(2)}</td>
+            <td>${latest.volume.toLocaleString()}</td>
+        `;
+    });
+
+    table.style.display = tbody.rows.length ? 'table' : 'none';
+}
+
+function makeTableSortable(tableId) {
+    const table = document.getElementById(tableId);
+    const headers = table.querySelectorAll('th');
+    let sortOrder = {};
+
+    headers.forEach((header, index) => {
+        sortOrder[index] = 1;
+        header.addEventListener('click', () => {
+            const tbody = table.querySelector('tbody');
+            const rows = Array.from(tbody.querySelectorAll('tr'));
+
+            rows.sort((a, b) => {
+                let aText = a.cells[index].textContent.trim();
+                let bText = b.cells[index].textContent.trim();
+
+                if (['Daily Gain/Loss', 'High', 'Low', 'Volume'].includes(header.textContent)) {
+                    aText = parseFloat(aText.replace(/[$,]/g, '')) || 0;
+                    bText = parseFloat(bText.replace(/[$,]/g, '')) || 0;
+                } else if (header.textContent === 'Date') {
+                    aText = new Date(aText);
+                    bText = new Date(bText);
+                } else {
+                    aText = aText.toUpperCase();
+                    bText = bText.toUpperCase();
+                }
+
+                if (aText < bText) return -1 * sortOrder[index];
+                if (aText > bText) return 1 * sortOrder[index];
+                return 0;
+            });
+
+            rows.forEach(row => tbody.appendChild(row));
+            sortOrder[index] *= -1;
+        });
+    });
+}
+
+document.getElementById('predictionForm').addEventListener('submit', e => {
+    e.preventDefault();
+    const ticker = document.getElementById('ticker').value.trim().toUpperCase();
+    if (!ticker) return;
+    window.location.href = `results.html?ticker=${encodeURIComponent(ticker)}&budget=${encodeURIComponent(budget)}`;
+});
+
+getBudgetFromURL();
+loadStocks();
+</script>
+</body>
+</html>
