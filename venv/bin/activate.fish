@@ -33,7 +33,7 @@ end
 # Unset irrelevant variables.
 deactivate nondestructive
 
-set -gx VIRTUAL_ENV '/home/anava/Stock Tracker/venv'
+set -gx VIRTUAL_ENV '/home/abdullah/Stock Tracker/AWS-Stock-Tracker/venv'
 
 set -gx _OLD_VIRTUAL_PATH $PATH
 set -gx PATH "$VIRTUAL_ENV/"bin $PATH

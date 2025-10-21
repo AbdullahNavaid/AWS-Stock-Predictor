@@ -19,7 +19,7 @@ TOP_100_TICKERS = [
     "FIS","MDLZ","REGN","SYK","GILD","CI","ZTS","MU","ANTM","TMUS",
     "CAT","SCHW","BDX","LRCX","AXP","CME","AMAT","DE","TJX",
     "MO","MMC","ADI","TGT","ITW","EQIX","CSX","SO","FISV","EW",
-    "PNC","ADI","ICE","CCI","EL","HUM","NOC","AON","MCO","SHW"
+    "PNC","DUK","ICE","CCI","EL","HUM","NOC","AON","MCO","SHW"
 ]
 
 # CORS headers
@@ -39,22 +39,46 @@ def fetch_ticker(ticker):
     ticker_fixed = fix_ticker(ticker)
     for attempt in range(3):
         try:
-            data = yf.download(ticker_fixed, period="60d", progress=False, auto_adjust=True)
+            # Use Ticker object for more reliable data fetching
+            stock = yf.Ticker(ticker_fixed)
+            data = stock.history(period="60d", auto_adjust=True)
+            
             if data.empty:
+                print(f"Empty data for {ticker} on attempt {attempt+1}")
+                time.sleep(0.5)
                 continue
+                
             data = data.sort_index(ascending=True)
-            history = [{
-                'date': idx.strftime('%Y-%m-%d'),
-                'open': float(row['Open']),
-                'high': float(row['High']),
-                'low': float(row['Low']),
-                'close': float(row['Close']),
-                'volume': int(row['Volume'])
-            } for idx, row in data.iterrows()]
-            return {'ticker': ticker, 'history': history}
+            
+            # Verify we have the required columns
+            required_cols = ['Open', 'High', 'Low', 'Close', 'Volume']
+            if not all(col in data.columns for col in required_cols):
+                print(f"Missing columns for {ticker}: {data.columns.tolist()}")
+                continue
+            
+            history = []
+            for idx, row in data.iterrows():
+                try:
+                    history.append({
+                        'date': idx.strftime('%Y-%m-%d'),
+                        'open': float(row['Open']),
+                        'high': float(row['High']),
+                        'low': float(row['Low']),
+                        'close': float(row['Close']),
+                        'volume': int(row['Volume'])
+                    })
+                except (ValueError, KeyError) as e:
+                    print(f"Row processing error for {ticker}: {e}")
+                    continue
+            
+            if history:
+                print(f"Successfully fetched {len(history)} days for {ticker}")
+                return {'ticker': ticker, 'history': history}
+            
         except Exception as e:
             print(f"Attempt {attempt+1} failed for {ticker}: {e}")
-            time.sleep(1)
+            time.sleep(0.5)
+    
     print(f"No data after retries for {ticker}")
     return {'ticker': ticker, 'history': []}  # placeholder for missing data
 

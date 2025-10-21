@@ -1,5 +1,5 @@
 #!/bin/sh
-'''exec' "/home/anava/Stock Tracker/venv/bin/python3" "$0" "$@"
+'''exec' "/home/abdullah/Stock Tracker/AWS-Stock-Tracker/venv/bin/python3" "$0" "$@"
 ' '''
 # -*- coding: utf-8 -*-
 import re

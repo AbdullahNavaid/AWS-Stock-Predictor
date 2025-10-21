@@ -1,4 +1,4 @@
-#!/home/anava/Stock Tracker/venv/bin/python3
+#!/home/abdullah/Stock Tracker/AWS-Stock-Tracker/venv/bin/python3
 
 import datetime
 import os
