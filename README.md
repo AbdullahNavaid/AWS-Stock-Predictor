@@ -4,6 +4,8 @@ A cloud-based stock tracking and analysis application built using AWS services a
 This tool provides real-time stock data, historical trend visualization, and budget tracking across multiple stocks.
 
 Website URL: http://stock-predictor-frontend.s3-website-us-east-1.amazonaws.com/
+or 
+https://d1j3vy090ij168.cloudfront.net/
 ---
 
 ## Features
