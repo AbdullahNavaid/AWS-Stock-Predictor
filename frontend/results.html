@@ -122,7 +122,7 @@ h1, h2 {
 <div class="container">
     <!-- Navigation link to return to stock list -->
     <div class="back-link">
-        <a href="index.html?budget=0">← Back to Stock List</a>
+        <a href="#" id="backLink">← Back to Stock List</a>
     </div>
     
     <!-- Page title showing selected ticker -->
@@ -161,6 +161,9 @@ const budget = parseFloat(params.get('budget')) || 0;
 // Display ticker name and budget in page header
 document.getElementById('tickerTitle').textContent = ticker ? `${ticker}` : 'No Ticker Selected';
 document.getElementById('budgetDisplay').textContent = `Budget: $${budget.toFixed(2)}`;
+
+// Set the back link with the correct budget parameter
+document.getElementById('backLink').href = `index.html?budget=${encodeURIComponent(budget)}`;
 
 /**
  * Fetches stock data from API and displays chart and latest prices.
